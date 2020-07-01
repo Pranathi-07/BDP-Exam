@@ -1,0 +1,75 @@
+1.
+hadoop fs -mkdir Exam
+
+hadoop fs -put /home/cloudera/Desktop/Friendsinput Exam/
+
+hadoop jar /home/cloudera/MutualFriendsfinder.jar MutualFriendsfinder Exam/Friendsinput.txt Exam/MutualFriendsOutput
+
+2.
+problemset1:
+hadoop fs -put /home/cloudera/Desktop/youtubedata.txt Exam/
+
+hadoop jar /home/cloudera/YoutubeAnalysis.jar YoutubeAnalysis Exam/youtubedata.txt Exam/youtubeanalysisoutput
+
+hadoop fs -cat Exam/youtubeanalysisoutput/part-r-00000 | sort -n -k2 -r | head -n5
+
+problemset2:
+hadoop jar /home/cloudera/YoutubeTopRated.jar YoutubeTopRated Exam/youtubedata.txt Exam/youtubeTop10output
+
+hadoop fs -cat Exam/youtubeTop10output/part-r-00000 | sort -n -k2 -r | head -n10
+
+
+3.
+create table Zomato(Restaurant_ID INT, Restaurant_Name STRING, Country_Code SMALLINT, City STRING, Address ARRAY<STRING>, Locality ARRAY<STRING>, Locality_Verbose ARRAY<STRING>, Longitude FLOAT, Latitude FLOAT, Cuisines ARRAY<STRING>, AverageCost_2 INT, Currency STRING,Has_Tablebooking STRING,Has_Onlinedelivery STRING, Isdelivering_now STRING, Switchtoorder_menu STRING, Price_range TINYINT, Aggregate_rating FLOAT, Rating_color STRING, Rating_text STRING, Votes INT)row format delimited fields terminated by ‘,’ collection items terminated by '#' stored as textfile tblproperties ("skip.header.line.count"="1");
+
+load data local inpath '/home/cloudera/Desktop/zomato.csv' into table Zomato;
+
+query1:restaurants which currency mathes with india
+select Restaurant_ID,Restaurant_Name,Currency from Zomato where Currency like 'Indian%'
+
+query2: using count to get numbers of restaurants in each countrycode.
+select Country_Code, count(Country_Code) from Zomato group by Country_Code;
+
+query3: To get top 10 restaurants with online delivery and highest rating
+select Restaurant_ID,Restaurant_Name,Aggregate_rating from Zomato where Has_Onlinedelivery="Yes" order by Aggregate_rating desc limit 10;
+
+query4:Concatinate latitude and longitude for country code 166
+select Restaurant_Name,concat(Latitude,",",Longitude) as location from Zomato where Country_Code=166 limit 10;
+
+query5: resturants which offer more than 6 cuisines
+select  Restaurant_Name, size(Cuisines) as number of cuisines from Zomato where size(Cuisines)>6;
+
+query6:condition on cuisines array with american and italian
+select Restaurant_Name,AverageCost_2 from Zomato where array_contains(Cuisines,"American","Italian") limit 10;
+
+query7:average rating for each country
+select Country_Code,avg(Aggregate_rating) as Avg_country_rating from Zomato Cluster by Country_Code;
+
+query8:wordcount for rating text
+select word,count(1) as cnt from (select explode(Rating_text) as word from Zomato) group by word order by cnt;
+
+query9:top 2 restaurants with highest votes for each Excellent and very good rating text 
+select Restaurant_ID,City from (select Restaurant_ID,City, votes from Zomato where Rating_text="Excellent" order by votes desc limit 2 UNION ALL select Restaurant_ID,City, votes from Zomato where Rating_text="Excellent" order by votes desc limit 2) as D;
+
+query10:Display all cities for country code 1
+select City from Zomato where Country_Code=1 sort by City;
+
+
+4.
+solrctl instancedir --generate /tmp/zomato_1
+gedit /tmp/zomato_1/conf/schema.xml
+solrctl instancedir --create zomato_1 /tmp/zomato_1
+solrctl collection --create zomato_1
+
+query1:Display all the restaurants name with Japanese cuisine
+query2: Display Restaurant name ,city and rating of the restaurants with indian currency and average cost is between 300 to 700
+query3:Display Restaurant name ,city,currency and votes of the restaurants whose votes are more than 5000
+quer4:Restaurants which have rating text as Very Good
+query5: restaurants which have rating greater than 4 and votes more than 5000
+query6: restaurants which are currently delivering online
+query7:facet on the country codes
+query8:restaurants with rating more than 4.5 in Banglore and Hyderabad
+query9:Latitude and longitudes of the restaurants with seafood cuisine in india
+query10:resturants which are rated poor or not rated are displayed
+
+
