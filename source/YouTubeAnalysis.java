@@ -28,13 +28,13 @@ public class YouTubeAnalysis {
         public void map(LongWritable key, Text value,
                         Context context) throws IOException,InterruptedException {
 	    // Storing the each line and converting to string
-            String record = value.toString();
+            String row = value.toString();
 	    // Splitting each record on tab space
-            String str[] = record.split("\t");
+            String colums[] = row.split("\t");
 	    // Checking a condition if the string array length greater than 5 to eliminate the ArrayIndexOutOfBoundsException error. 
-            if(str.length>5){
+            if(colums.length>5){
 		// setting the category value which is in 4th column
-                category.set(str[3]);
+                category.set(colums[3]);
             }
 	    // writing the key and value into the context
             context.write(category, one);

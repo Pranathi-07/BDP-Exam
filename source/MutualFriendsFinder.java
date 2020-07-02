@@ -24,34 +24,34 @@ public class MutualFriendsFinder {
     public static class Map extends Mapper<LongWritable, Text, Text, Text> {
 	
         private Text pair = new Text(); // type of output key
-        private Text List = new Text(); // type of output value of mapper
+        private Text friend_list = new Text(); // type of output value of mapper
 	// overriding map that runs for every line of input
         public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
 	    // Reading each line of input file and converting to string
             String[] line = value.toString().split(" -> ");
 	    // Taking the first value i.e current friend
-            String User = line[0];
+            String current_user = line[0];
             if (line.length ==2) {
 		// Converting the firends array to an ArrayList
                 ArrayList<String> FriendsList = new ArrayList<String>(Arrays.asList(line[1].split("\\,")));
                 // Looping through the firendslist
                 for(String Friend:FriendsList){
 		    // comparing the friends and sorting the key so that the friends are in order
-                    String FriendPair = (User.compareTo(Friend) < 0)? "(" + User + "," + Friend + ")" : "(" + Friend + "," + User + ")";
+                    String FriendPair = (current_user.compareTo(Friend) < 0)? "(" + current_user + "," + Friend + ")" : "(" + Friend + "," + current_user + ")";
 
-                    ArrayList<String> temp = new ArrayList<String>(FriendsList);
-                    temp.remove(Friend);
-                    String listString = "";
+                    ArrayList<String> tmp = new ArrayList<String>(FriendsList);
+                    tmp.remove(Friend);
+                    String list = "";
 		    // Appending the friend values to list
-                    for (String t: temp) {
-                        listString += t + ',';
+                    for (String t: tmp) {
+                        list += t + ',';
                     }
 		    // Removing the extra ',' in the end
-                    listString = listString.substring(0, (listString.length() - 1));
+                    list = list.substring(0, (listString.length() - 1));
 		    // Setting the Pair as key and friends list as value
                     pair.set(FriendPair);
-                    List.set(listString);
-                    context.write(pair,List);
+                    friend_list.set(list);
+                    context.write(pair,friend_list);
                 }
             }
 
@@ -67,25 +67,25 @@ public class MutualFriendsFinder {
             // Creating a hashmap instance to check the redundancy of key value
             HashMap<String, Integer> map = new HashMap<String, Integer>();
 	    // To store the result
-            StringBuilder sb = new StringBuilder();
-            sb.append("(");
+            StringBuilder sbuilder = new StringBuilder();
+            sbuilder.append("(");
 	    // Looping through the friends list of mapper output
-            for (Text friends : values) {
-                List<String> temp = Arrays.asList(friends.toString().split(","));
-                for (String friend : temp) {
-                    if (map.containsKey(friend))
-                        sb.append(friend + ','); // append to string if friend already present
+            for (Text frnds : values) {
+                List<String> temp_list = Arrays.asList(frnds.toString().split(","));
+                for (String frnd : temp_list) {
+                    if (map.containsKey(frnd))
+                        sbuilder.append(frnd + ','); // append to string if friend already present
                     else
                         map.put(friend, 1);
                 }
             }
 	    // Deleting the last ','
-            if (sb.lastIndexOf(",") > -1) {
-                sb.deleteCharAt(sb.lastIndexOf(","));
+            if (sbuilder.lastIndexOf(",") > -1) {
+                sbuilder.deleteCharAt(sbuilder.lastIndexOf(","));
             }
-            sb.append(")");
+            sbuilder.append(")");
 	    // Setting the final key and result
-            result.set(new Text(sb.toString()));
+            result.set(new Text(sbuilder.toString()));
             context.write(key, result);
         }
     }

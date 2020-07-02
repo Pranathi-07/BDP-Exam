@@ -23,24 +23,24 @@ public class YouTubeTopRated {
 
 	// Extending the Mapper default class with keyIn as LongWritable , ValueIn as Text, KeyOut as Text and ValueOut as FloatWritable.
     public static class Map extends Mapper<LongWritable,Text,Text,FloatWritable>{
-        private  FloatWritable rating = new FloatWritable(); // variable to store the rating
+        private  FloatWritable rating_value = new FloatWritable(); // variable to store the rating
         private Text videoId = new Text(); // variable to store the videoId
 	// overriding map that runs for every line of input
         public void map(LongWritable key, Text value,
                         Context context) throws IOException,InterruptedException {
 	    // Storing the each line and converting to string
-            String record = value.toString();
+            String row = value.toString();
 	    // Splitting each record on tab space
-            String str[] = record.split("\t");
+            String columns[] = rwo.split("\t");
 	    // Checking a condition if the string array length greater than 6 to eliminate the ArrayIndexOutOfBoundsException error. 
-            if(str.length>6){
+            if(columns.length>6){
 		// setting the Rating value which is in 7th column
-                rating.set(Float.parseFloat(str[6]));
+                rating.set(Float.parseFloat(columns[6]));
 		// setting the Video Id value which is in 1st column
-                videoId.set(str[0]);
+                videoId.set(columns[0]);
             }
 	    // writing the key and value into the context
-            context.write(videoId,rating);
+            context.write(videoId,rating_value);
         }
     }
 
@@ -52,15 +52,15 @@ public class YouTubeTopRated {
 	    // count to store the sum of all the values for each key
             float sum = 0;
 		// varibale to increment with corresponding to values of particular key.
-            int l = 0;
+            int number = 0;
 	    // Looping through the iterable values which are output of sort and shuffle phase
             for (FloatWritable val : values) {
 		// Incrementing and calcluating sum for each key
-                l += 1;
+                number += 1;
                 sum += val.get();
             }
 	    // Calcluating the average of the sum
-            sum = sum / l;
+            sum = sum / number;
 	    // writing the key and value into the context
             context.write(key, new FloatWritable(sum));
         }
